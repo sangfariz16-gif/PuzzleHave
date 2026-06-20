@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PuzzleHave - Sliding Puzzle Game</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Fredoka+One&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- SCREEN: Main Menu -->
+    <div id="screen-menu" class="screen active">
+        <div class="menu-bg">
+            <div class="floating-piece" style="--delay:0s; --x:10%; --y:15%">🧩</div>
+            <div class="floating-piece" style="--delay:0.5s; --x:80%; --y:25%">🎮</div>
+            <div class="floating-piece" style="--delay:1s; --x:20%; --y:70%">⭐</div>
+            <div class="floating-piece" style="--delay:1.5s; --x:75%; --y:65%">🏆</div>
+            <div class="floating-piece" style="--delay:2s; --x:50%; --y:10%">✨</div>
+        </div>
+        <div class="menu-container">
+            <div class="logo-area">
+                <h1 class="game-title">PuzzleHave</h1>
+                <p class="game-subtitle">Sliding Puzzle Adventure</p>
+            </div>
+            <div class="menu-buttons">
+                <button class="btn btn-primary btn-large" onclick="showScreen('screen-category')">
+                    🎮 Main Sekarang
+                </button>
+                <button class="btn btn-secondary btn-large" onclick="showScreen('screen-tutorial')">
+                    📖 Tutorial
+                </button>
+                <button class="btn btn-secondary btn-large" onclick="showScreen('screen-leaderboard')">
+                    🏆 Leaderboard
+                </button>
+                <button class="btn btn-secondary btn-large" onclick="showScreen('screen-settings')">
+                    ⚙️ Pengaturan
+                </button>
+                <button class="btn btn-secondary btn-large" onclick="showScreen('screen-about')">
+                    ℹ️ Tentang Game
+                </button>
+            </div>
+            <div class="menu-footer">
+                <p>v1.0.0 &bull; Made with ❤️ by PuzzleHave</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN: Category / Difficulty -->
+    <div id="screen-category" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')">← Kembali</button>
+            <h2>Pilih Gambar & Kesulitan</h2>
+        </div>
+        <div class="category-container">
+            <div class="section-title">🖼️ Pilih Gambar</div>
+            <div class="image-grid" id="imageGrid"></div>
+            <div class="section-title">🎯 Pilih Kesulitan</div>
+            <div class="difficulty-grid">
+                <button class="difficulty-btn active" data-size="3" onclick="selectDifficulty(this, 3)">
+                    <span class="diff-icon">😊</span>
+                    <span class="diff-name">Mudah</span>
+                    <span class="diff-desc">3×3 (8 keping)</span>
+                </button>
+                <button class="difficulty-btn" data-size="4" onclick="selectDifficulty(this, 4)">
+                    <span class="diff-icon">😤</span>
+                    <span class="diff-name">Normal</span>
+                    <span class="diff-desc">4×4 (15 keping)</span>
+                </button>
+                <button class="difficulty-btn" data-size="5" onclick="selectDifficulty(this, 5)">
+                    <span class="diff-icon">😰</span>
+                    <span class="diff-name">Sulit</span>
+                    <span class="diff-desc">5×5 (24 keping)</span>
+                </button>
+            </div>
+            <button class="btn btn-primary btn-large" onclick="startGame()" id="startBtn">
+                🚀 Mulai Game!
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN: Game -->
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <button class="btn-back" onclick="quitGame()">← Keluar</button>
+            <div class="game-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Waktu</span>
+                    <span class="stat-value" id="timer">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Langkah</span>
+                    <span class="stat-value" id="moveCount">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Skor</span>
+                    <span class="stat-value" id="scoreDisplay">0</span>
+                </div>
+            </div>
+            <button class="btn-icon" onclick="shuffleBoard()" title="Acak ulang">🔀</button>
+        </div>
+        <div class="game-area">
+            <div class="preview-container">
+                <div class="preview-label">Target:</div>
+                <canvas id="previewCanvas" width="120" height="120"></canvas>
+            </div>
+            <div id="puzzleBoard" class="puzzle-board"></div>
+        </div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="togglePeek()" id="peekBtn">👁️ Lihat Asli</button>
+            <button class="btn btn-secondary" onclick="hintMove()">💡 Petunjuk</button>
+            <button class="btn btn-danger" onclick="shuffleBoard()">🔀 Acak Ulang</button>
+        </div>
+        <!-- Peek overlay -->
+        <div id="peekOverlay" class="peek-overlay hidden">
+            <canvas id="fullPreviewCanvas" width="400" height="400"></canvas>
+            <p>Lepas untuk menyembunyikan</p>
+        </div>
+    </div>
+
+    <!-- SCREEN: Win -->
+    <div id="screen-win" class="screen">
+        <div class="win-container">
+            <div class="win-animation">🎉</div>
+            <h2 class="win-title">Selamat!</h2>
+            <p class="win-subtitle">Kamu berhasil menyelesaikan puzzle!</p>
+            <div class="win-stats">
+                <div class="win-stat">
+                    <span class="win-stat-icon">⏱️</span>
+                    <span class="win-stat-label">Waktu</span>
+                    <span class="win-stat-value" id="winTime">--:--</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-icon">👣</span>
+                    <span class="win-stat-label">Langkah</span>
+                    <span class="win-stat-value" id="winMoves">0</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-icon">⭐</span>
+                    <span class="win-stat-label">Skor</span>
+                    <span class="win-stat-value" id="winScore">0</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-icon">🏅</span>
+                    <span class="win-stat-label">Rating</span>
+                    <span class="win-stat-value" id="winRating">⭐⭐⭐</span>
+                </div>
+            </div>
+            <div class="name-input-area">
+                <input type="text" id="playerName" placeholder="Masukkan nama kamu..." maxlength="20" class="name-input">
+            </div>
+            <div class="win-buttons">
+                <button class="btn btn-primary" onclick="saveScore()">💾 Simpan Skor</button>
+                <button class="btn btn-secondary" onclick="playAgain()">🔄 Main Lagi</button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-menu')">🏠 Menu Utama</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN: Tutorial -->
+    <div id="screen-tutorial" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')">← Kembali</button>
+            <h2>📖 Tutorial</h2>
+        </div>
+        <div class="tutorial-container">
+            <div class="tutorial-slides" id="tutorialSlides">
+                <!-- Slide 1 -->
+                <div class="tutorial-slide active" data-slide="0">
+                    <div class="tutorial-icon">🧩</div>
+                    <h3>Apa itu Sliding Puzzle?</h3>
+                    <p>Sliding Puzzle adalah permainan di mana kamu harus menyusun keping gambar yang teracak menjadi gambar utuh dengan cara menggeser keping ke ruang kosong.</p>
+                    <div class="tutorial-demo">
+                        <div class="demo-board demo-3x3">
+                            <div class="demo-tile">1</div>
+                            <div class="demo-tile">2</div>
+                            <div class="demo-tile">3</div>
+                            <div class="demo-tile">4</div>
+                            <div class="demo-tile empty"></div>
+                            <div class="demo-tile">6</div>
+                            <div class="demo-tile">7</div>
+                            <div class="demo-tile">5</div>
+                            <div class="demo-tile">8</div>
+                        </div>
+                        <span class="demo-arrow">→</span>
+                        <div class="demo-board demo-3x3 solved">
+                            <div class="demo-tile">1</div>
+                            <div class="demo-tile">2</div>
+                            <div class="demo-tile">3</div>
+                            <div class="demo-tile">4</div>
+                            <div class="demo-tile">5</div>
+                            <div class="demo-tile">6</div>
+                            <div class="demo-tile">7</div>
+                            <div class="demo-tile">8</div>
+                            <div class="demo-tile empty"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="tutorial-slide" data-slide="1">
+                    <div class="tutorial-icon">👆</div>
+                    <h3>Cara Bermain</h3>
+                    <p>Klik atau sentuh keping yang bersebelahan dengan ruang kosong untuk menggesernya. Kamu hanya bisa menggeser keping yang langsung berbatasan dengan ruang kosong.</p>
+                    <div class="tutorial-tips">
+                        <div class="tip-item">✅ Klik keping di atas, bawah, kiri, atau kanan ruang kosong</div>
+                        <div class="tip-item">❌ Tidak bisa menggeser keping diagonal</div>
+                        <div class="tip-item">✅ Keping akan otomatis bergeser ke ruang kosong</div>
+                        <div class="tip-item">🎯 Susun semua keping sesuai urutan angka/gambar</div>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="tutorial-slide" data-slide="2">
+                    <div class="tutorial-icon">🎯</div>
+                    <h3>Tingkat Kesulitan</h3>
+                    <div class="difficulty-info">
+                        <div class="diff-info-item">
+                            <span class="diff-badge easy">😊 Mudah</span>
+                            <span>3×3 grid (8 keping) — Cocok untuk pemula</span>
+                        </div>
+                        <div class="diff-info-item">
+                            <span class="diff-badge normal">😤 Normal</span>
+                            <span>4×4 grid (15 keping) — Butuh strategi</span>
+                        </div>
+                        <div class="diff-info-item">
+                            <span class="diff-badge hard">😰 Sulit</span>
+                            <span>5×5 grid (24 keping) — Untuk ahli puzzle!</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 4 -->
+                <div class="tutorial-slide" data-slide="3">
+                    <div class="tutorial-icon">⭐</div>
+                    <h3>Sistem Skor</h3>
+                    <p>Skor dihitung berdasarkan waktu dan jumlah langkah. Semakin cepat dan sedikit langkah, semakin tinggi skormu!</p>
+                    <div class="score-info">
+                        <div class="score-item">
+                            <span class="score-stars">⭐⭐⭐</span>
+                            <span>Sempurna! Langkah & waktu optimal</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-stars">⭐⭐</span>
+                            <span>Bagus! Sedikit di atas rata-rata</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-stars">⭐</span>
+                            <span>Selesai! Terus berlatih</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 5 -->
+                <div class="tutorial-slide" data-slide="4">
+                    <div class="tutorial-icon">💡</div>
+                    <h3>Tips & Trik</h3>
+                    <div class="tutorial-tips">
+                        <div class="tip-item">💡 Gunakan tombol <strong>Petunjuk</strong> jika bingung</div>
+                        <div class="tip-item">👁️ Tombol <strong>Lihat Asli</strong> untuk melihat gambar lengkap</div>
+                        <div class="tip-item">🔢 Selesaikan baris atas dulu, baru baris bawah</div>
+                        <div class="tip-item">🔄 Fokus pada sudut kiri atas sebagai titik referensi</div>
+                        <div class="tip-item">⏱️ Latihan rutin akan meningkatkan kecepatanmu!</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tutorial-nav">
+                <button class="btn btn-secondary" onclick="prevSlide()" id="prevBtn" disabled>← Sebelumnya</button>
+                <div class="slide-dots" id="slideDots"></div>
+                <button class="btn btn-secondary" onclick="nextSlide()" id="nextBtn">Selanjutnya →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN: Leaderboard -->
+    <div id="screen-leaderboard" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')">← Kembali</button>
+            <h2>🏆 Leaderboard</h2>
+        </div>
+        <div class="leaderboard-container">
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" onclick="showLeaderboard(this, 3)">3×3</button>
+                <button class="tab-btn" onclick="showLeaderboard(this, 4)">4×4</button>
+                <button class="tab-btn" onclick="showLeaderboard(this, 5)">5×5</button>
+            </div>
+            <div id="leaderboardContent" class="leaderboard-list"></div>
+            <button class="btn btn-danger" onclick="clearLeaderboard()" style="margin-top:20px">🗑️ Hapus Semua Skor</button>
+        </div>
+    </div>
+
+    <!-- SCREEN: Settings -->
+    <div id="screen-settings" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')">← Kembali</button>
+            <h2>⚙️ Pengaturan</h2>
+        </div>
+        <div class="settings-container">
+            <div class="setting-group">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-name">🔊 Efek Suara</span>
+                        <span class="setting-desc">Suara saat menggeser keping</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="soundToggle" checked onchange="saveSetting('sound', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-name">🎵 Musik Latar</span>
+                        <span class="setting-desc">Musik selama bermain</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="musicToggle" onchange="saveSetting('music', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-name">📱 Animasi</span>
+                        <span class="setting-desc">Animasi geser keping</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="animToggle" checked onchange="saveSetting('animation', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-name">🔢 Tampilkan Angka</span>
+                        <span class="setting-desc">Tampilkan nomor urut di keping</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="numbersToggle" onchange="saveSetting('showNumbers', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-group">
+                <h3 class="setting-group-title">🎨 Tema</h3>
+                <div class="theme-grid">
+                    <button class="theme-btn active" data-theme="default" onclick="setTheme(this, 'default')">
+                        <div class="theme-preview theme-default"></div>
+                        <span>Default</span>
+                    </button>
+                    <button class="theme-btn" data-theme="ocean" onclick="setTheme(this, 'ocean')">
+                        <div class="theme-preview theme-ocean"></div>
+                        <span>Ocean</span>
+                    </button>
+                    <button class="theme-btn" data-theme="forest" onclick="setTheme(this, 'forest')">
+                        <div class="theme-preview theme-forest"></div>
+                        <span>Forest</span>
+                    </button>
+                    <button class="theme-btn" data-theme="sunset" onclick="setTheme(this, 'sunset')">
+                        <div class="theme-preview theme-sunset"></div>
+                        <span>Sunset</span>
+                    </button>
+                    <button class="theme-btn" data-theme="dark" onclick="setTheme(this, 'dark')">
+                        <div class="theme-preview theme-dark"></div>
+                        <span>Dark</span>
+                    </button>
+                    <button class="theme-btn" data-theme="candy" onclick="setTheme(this, 'candy')">
+                        <div class="theme-preview theme-candy"></div>
+                        <span>Candy</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN: About -->
+    <div id="screen-about" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')">← Kembali</button>
+            <h2>ℹ️ Tentang Game</h2>
+        </div>
+        <div class="about-container">
+            <div class="about-logo">🧩</div>
+            <h2 class="about-title">PuzzleHave</h2>
+            <p class="about-version">Versi 1.0.0</p>
+            <div class="about-card">
+                <h3>📌 Deskripsi</h3>
+                <p>PuzzleHave adalah game sliding puzzle berbasis web yang bisa dimainkan langsung di browser tanpa perlu instalasi. Susun kepingan gambar acak menjadi gambar utuh!</p>
+            </div>
+            <div class="about-card">
+                <h3>🎮 Fitur</h3>
+                <ul class="feature-list">
+                    <li>✅ 3 tingkat kesulitan (3×3, 4×4, 5×5)</li>
+                    <li>✅ Berbagai pilihan gambar menarik</li>
+                    <li>✅ Sistem skor & leaderboard</li>
+                    <li>✅ Tutorial interaktif</li>
+                    <li>✅ 6 tema visual berbeda</li>
+                    <li>✅ Animasi halus</li>
+                    <li>✅ Responsif di semua perangkat</li>
+                    <li>✅ Fitur petunjuk & lihat asli</li>
+                </ul>
+            </div>
+            <div class="about-card">
+                <h3>🛠️ Teknologi</h3>
+                <p>Dibangun dengan HTML5, CSS3, dan JavaScript vanilla. Tidak memerlukan framework atau library eksternal.</p>
+            </div>
+            <div class="about-card">
+                <h3>👨‍💻 Developer</h3>
+                <p>Dibuat oleh <strong>sangfariz16-gif</strong></p>
+                <p>Repository: <a href="https://github.com/sangfariz16-gif/PuzzleHave" target="_blank" class="link">github.com/sangfariz16-gif/PuzzleHave</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/images.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
